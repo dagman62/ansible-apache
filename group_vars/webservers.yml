@@ -1,0 +1,6 @@
+---
+apache:
+  user: www-data
+  group: www-data
+  home: /opt/apache
+  email: admin@example.com

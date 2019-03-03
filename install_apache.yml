@@ -1,0 +1,239 @@
+---
+
+- name: Compile Apache from sources
+  hosts: webserver
+  vars:
+    apache_version: 2.4.38
+    apr_version: 1.6.5
+    apru_version: 1.6.1
+    php_version: 7.2.9
+    php_tarball_url: "http://php.net/get/php-{{ php_version }}.tar.gz/from/this/mirror"
+    php_install_dir: "/tmp/{{ php_version }}"
+    apache_tarball_url: "http://www-us.apache.org/dist/httpd/httpd-{{ apache_version }}.tar.gz"
+    apache_install_dir: "/tmp/{{ apache_version }}"
+    apr_tarball_url: "http://www-us.apache.org/dist/apr/apr-{{ apr_version }}.tar.gz"
+    apr_install_dir: "/tmp/{{ apr_version }}"
+    apru_tarball_url: "http://www-us.apache.org/dist/apr/apr-util-{{ apru_version }}.tar.gz"
+    apru_install_dir: "/tmp/{{ apru_version }}"
+    apache_user: "www-data"
+    apache_group: "www-data"
+
+  tasks:
+  - name: Installing Apache Dependencies
+    become: yes
+    apt:
+      name: "{{ item }}"
+      update_cache: yes
+    with_items:
+     - default-libmysqlclient-dev 
+     - default-libmysqld-dev 
+     - postgresql-server-dev-all 
+     - libexpat1-dev 
+     - libssl-dev 
+     - libpcre++-dev 
+     - libxml++2.6-dev 
+     - libtool-bin 
+     - libbz2-dev 
+     - libcurl4-nss-dev 
+     - libpng-dev
+     - systemd
+
+  - name: Ensure group {{ apache_group }} exists
+    group:
+      name: "{{ apache_group }}"
+      gid: 501
+      state: present
+
+  - name: Add the user {{ apache_user }}
+    user:
+      name: "{{ apache_user }}"
+      comment: Apache Admin User
+      shell: /bin/false
+      uid: 501
+      group: "{{ apache_group }}"
+
+  - name: Downloading Apache APR sources
+    get_url:
+      url: "{{ apr_tarball_url }}"
+      dest: "/tmp/{{ apr_version }}.tar.gz"
+    register: apr_source
+
+  - name: Unpacking Apache APR
+    unarchive:
+      copy: no
+      dest: /tmp/
+      src: "{{ apr_source.dest }}"
+    when: apr_source.changed
+    register: apr_source_unpack
+
+  - name: Configuring Apache APR source
+    command: "./configure --prefix=/opt/apache"
+    args:
+      chdir: "{{ apr_install_dir }}"
+    when: apr_source_unpack|changed
+    register: apr_configure
+
+  - name: Installing Apache APR
+    become: yes
+    shell: make && make install
+    args:
+      chdir: "{{ apr_install_dir }}"
+    when: apr_configure|changed
+
+  - name: Downloading Apache APRU sources
+    get_url:
+      url: "{{ apru_tarball_url }}"
+      dest: "/tmp/{{ apru_version }}.tar.gz"
+    register: apru_source
+
+  - name: Unpacking Apache APRU
+    unarchive:
+      copy: no
+      dest: /tmp/
+      src: "{{ apru_source.dest }}"
+    when: apru_source.changed
+    register: apru_source_unpack
+
+  - name: Configuring Apache APRU source
+    command: "./configure --prefix=/opt/apache --with-apr=/opt/apache/bin/apr-1-config"
+    args:
+      chdir: "{{ apru_install_dir }}"
+    when: apru_source_unpack|changed
+    register: apru_configure
+
+  - name: Installing Apache APRU
+    become: yes
+    shell: make && make install
+    args:
+      chdir: "{{ apru_install_dir }}"
+    when: apru_configure|changed
+
+  - name: Downloading Apache sources
+    get_url:
+      url: "{{ apache_tarball_url }}"
+      dest: "/tmp/{{ apache_version }}.tar.gz"
+    register: apache_source
+
+  - name: Unpacking Apache
+    unarchive:
+      copy: no
+      dest: /tmp/
+      src: "{{ apache_source.dest }}"
+    when: apache_source.changed
+    register: apache_source_unpack
+
+  - name: Configuring Apache source
+    command: "./configure {{ item }}"
+    args:
+      chdir: "{{ apache_install_dir }}"
+    with_items:
+      - "--prefix=/opt/apache"
+      - "--enable-ssl"
+      - "--enable-proxy"
+      - "--enable-modules=all"
+      - "--enable-mods-shared=all"
+      - "--enable-module=so"
+      - "--enable-proxy-http"
+      - "--enable-proxy-balancer"
+      - "--enable-proxy-ajp"
+      - "--with-ssl"
+      - "--with-mpm=prefork"
+      - "--with-apr=/opt/apache/bin/apr-1-config"
+      - "--with-apr-util=/opt/apache/bin/apu-1-config"
+      - "--enable-cgi"
+    when: apache_source_unpack|changed
+    register: apache_configure
+
+  - name: Installing Apache
+    become: yes
+    shell: make && make install
+    args:
+      chdir: "{{ apache_install_dir }}"
+    when: apache_configure|changed
+
+  # start install php
+  - name: Downloading PHP sources
+    get_url:
+      url: "{{ php_tarball_url }}"
+      dest: "/tmp/{{ php_version }}.tar.gz"
+    register: php_source
+
+  - name: Unpacking PHP
+    unarchive:
+      copy: no
+      dest: /tmp/
+      src: "{{ php_source.dest }}"
+    when: php_source.changed
+    register: php_source_unpack
+
+  - name: Configuring PHP source
+    command: "./configure {{ item }}"
+    args:
+      chdir: "{{ php_install_dir }}"
+    with_items:
+      - "--prefix=/usr/local"
+      - "--with-zlib"
+      - "--enable-zip"
+      - "--enable-wddx"
+      - "--enable-sysvmsg"
+      - "--enable-sockets"
+      - "--enable-soap"
+      - "--enable-shmop"
+      - "--enable-embedded-mysqli"
+      - "--enable-mbstring"
+      - "--with-mhash"
+      - "--with-gettext"
+      - "--with-gd"
+      - "--enable-ftp"
+      - "--enable-exif"
+      - "--enable-dba"
+      - "--with-curl"
+      - "--enable-calendar"
+      - "--with-bz2"
+      - "--enable-bcmath"
+      - "--enable-static"
+      - "--with-mysqli"
+      - "--with-pgsql"
+      - "--with-apxs2=/opt/apache/bin/apxs"
+    when: php_source_unpack|changed
+    register: php_configure
+
+  - name: Installing PHP
+    become: yes
+    shell: make && make install
+    args:
+      chdir: "{{ php_install_dir }}"
+    when: php_configure|changed
+  # end install php
+
+  - name: Creating Apache conf file
+    become: yes
+    template:
+      src: httpd.conf.j2
+      dest: /opt/apache/conf/httpd.conf
+      owner: "{{ apache_user }}"
+      group: "{{ apache_group }}"
+      mode: 0644
+
+  - name: Installing Apache init script (service)
+    become: yes
+    template:
+      src: apache.service.j2
+      dest: /etc/systemd/system/apache.service
+      owner: root
+      group: root
+      mode: 0755
+
+  - name: Change ownership recursively apache home
+    become: yes
+    command: "chown -R {{ apache_user }}:{{ apache_group }} /opt/apache"
+
+  - name: Reload systemd daemon
+    become: yes
+    command: "systemctl daemon-reload"
+
+  - name: Starting Apache
+    become: yes
+    service:
+      name: apache
+      state: started
