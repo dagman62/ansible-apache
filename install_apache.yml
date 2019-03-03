@@ -3,17 +3,17 @@
 - name: Compile Apache from sources
   hosts: webserver
   vars:
-    apache_version: 2.4.38
-    apr_version: 1.6.5
-    apru_version: 1.6.1
-    php_version: 7.2.9
-    php_tarball_url: "http://php.net/get/php-{{ php_version }}.tar.gz/from/this/mirror"
+    apache_version: httpd-2.4.38
+    apr_version: apr-1.6.5
+    apru_version: apr-util-1.6.1
+    php_version: php-7.2.9
+    php_tarball_url: "http://php.net/get/{{ php_version }}.tar.gz/from/this/mirror"
     php_install_dir: "/tmp/{{ php_version }}"
-    apache_tarball_url: "http://www-us.apache.org/dist/httpd/httpd-{{ apache_version }}.tar.gz"
+    apache_tarball_url: "http://www-us.apache.org/dist/httpd/{{ apache_version }}.tar.gz"
     apache_install_dir: "/tmp/{{ apache_version }}"
-    apr_tarball_url: "http://www-us.apache.org/dist/apr/apr-{{ apr_version }}.tar.gz"
+    apr_tarball_url: "http://www-us.apache.org/dist/apr/{{ apr_version }}.tar.gz"
     apr_install_dir: "/tmp/{{ apr_version }}"
-    apru_tarball_url: "http://www-us.apache.org/dist/apr/apr-util-{{ apru_version }}.tar.gz"
+    apru_tarball_url: "http://www-us.apache.org/dist/apr/{{ apru_version }}.tar.gz"
     apru_install_dir: "/tmp/{{ apru_version }}"
     apache_user: "www-data"
     apache_group: "www-data"
@@ -123,24 +123,9 @@
     register: apache_source_unpack
 
   - name: Configuring Apache source
-    command: "./configure {{ item }}"
+    command: "./configure --prefix=/opt/apache --enable-ssl --enable-proxy --enable-modules=all --enable-mods-shared=all --enable-module=so --enable-proxy-http --enable-proxy-balancer --enable-proxy-ajp --with-ssl --with-mpm=prefork --with-apr=/opt/apache/bin/apr-1-config --with-apr-util=/opt/apache/bin/apu-1-config --enable-cgi"
     args:
       chdir: "{{ apache_install_dir }}"
-    with_items:
-      - "--prefix=/opt/apache"
-      - "--enable-ssl"
-      - "--enable-proxy"
-      - "--enable-modules=all"
-      - "--enable-mods-shared=all"
-      - "--enable-module=so"
-      - "--enable-proxy-http"
-      - "--enable-proxy-balancer"
-      - "--enable-proxy-ajp"
-      - "--with-ssl"
-      - "--with-mpm=prefork"
-      - "--with-apr=/opt/apache/bin/apr-1-config"
-      - "--with-apr-util=/opt/apache/bin/apu-1-config"
-      - "--enable-cgi"
     when: apache_source_unpack|changed
     register: apache_configure
 
@@ -167,34 +152,9 @@
     register: php_source_unpack
 
   - name: Configuring PHP source
-    command: "./configure {{ item }}"
+    command: "./configure --prefix=/usr/local --with-zlib --enable-zip --enable-wddx --enable-sysvmsg --enable-sockets --enable-soap --enable-shmop --enable-embedded-mysqli --enable-mbstring --with-mhash --with-gettext --with-gd --enable-ftp --enable-exif --enable-dba --with-curl --enable-calendar --with-bz2 --enable-bcmath --enable-static --with-mysqli --with-pgsql --with-apxs2=/opt/apache/bin/apxs"
     args:
       chdir: "{{ php_install_dir }}"
-    with_items:
-      - "--prefix=/usr/local"
-      - "--with-zlib"
-      - "--enable-zip"
-      - "--enable-wddx"
-      - "--enable-sysvmsg"
-      - "--enable-sockets"
-      - "--enable-soap"
-      - "--enable-shmop"
-      - "--enable-embedded-mysqli"
-      - "--enable-mbstring"
-      - "--with-mhash"
-      - "--with-gettext"
-      - "--with-gd"
-      - "--enable-ftp"
-      - "--enable-exif"
-      - "--enable-dba"
-      - "--with-curl"
-      - "--enable-calendar"
-      - "--with-bz2"
-      - "--enable-bcmath"
-      - "--enable-static"
-      - "--with-mysqli"
-      - "--with-pgsql"
-      - "--with-apxs2=/opt/apache/bin/apxs"
     when: php_source_unpack|changed
     register: php_configure
 
