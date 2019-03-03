@@ -1,5 +1,5 @@
 
-ServerRoot "{{ apache.home }}"
+ServerRoot "{{ apache_home }}"
 
 Listen 80
 
@@ -137,12 +137,12 @@ ExpiresbyType application/x-javascript A604800
 </FilesMatch>
 
 
-User {{ apache.user }}
-Group {{ apache.group }}
+User {{ apache_user }}
+Group {{ apache_group }}
 
 </IfModule>
 
-ServerAdmin {{ apache.email }}
+ServerAdmin {{ apache_email }}
 
 ServerName {{ ansible_fqdn }}:80
 
@@ -151,8 +151,8 @@ ServerName {{ ansible_fqdn }}:80
     Require all denied
 </Directory>
 
-DocumentRoot "{{ apache.home }}/htdocs"
-<Directory "{{ apache.home }}/htdocs">
+DocumentRoot "{{ apache_home }}/htdocs"
+<Directory "{{ apache_home }}/htdocs">
     Options Indexes FollowSymLinks
     AllowOverride None
     Require all granted
@@ -182,14 +182,14 @@ LogLevel warn
 </IfModule>
 
 <IfModule alias_module>
-    ScriptAlias /cgi-bin/ "{{ apache.home }}/cgi-bin/"
+    ScriptAlias /cgi-bin/ "{{ apache_home }}/cgi-bin/"
 </IfModule>
 
 <IfModule cgid_module>
     #Scriptsock cgisock
 </IfModule>
 
-<Directory "{{ apache.home }}/cgi-bin">
+<Directory "{{ apache_home }}/cgi-bin">
     AllowOverride None
     Options None
     Require all granted

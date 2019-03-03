@@ -17,6 +17,8 @@
     apru_install_dir: "/tmp/{{ apru_version }}"
     apache_user: "www-data"
     apache_group: "www-data"
+    apache_home: "/opt/apache"
+    apache_email: "admin@example.com"
 
   tasks:
   - name: Installing Apache Dependencies
@@ -185,15 +187,12 @@
       mode: 0755
 
   - name: Change ownership recursively apache home
-    become: yes
-    command: "chown -R {{ apache_user }}:{{ apache_group }} /opt/apache"
-
-  - name: Reload systemd daemon
-    become: yes
-    command: "systemctl daemon-reload"
+    file:
+      path: "{{ apache_home }}"
+      owner: "{{ apache_user }}"
+      group: "{{ apache_group }}"
+      recurse: yes
 
   - name: Starting Apache
     become: yes
-    service:
-      name: apache
-      state: started
+    command: "/opt/apache/bin/apachectl start"

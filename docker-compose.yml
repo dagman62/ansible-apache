@@ -1,0 +1,43 @@
+version: '2'
+
+networks:
+  custom:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 192.168.61.0/24
+
+volumes: 
+  workspace: 
+  
+services:
+  control:
+    build: .
+    image: dagman62/ubuntu-control
+    container_name: control
+    ports:
+      - "2222:22"
+    volumes:
+      - ${PWD}/workspace:/root/workspace
+    networks:
+      custom:
+        ipv4_address: 192.168.61.10
+    dns: 8.8.8.8
+    domainname: example.com 
+    hostname: control
+    extra_hosts:
+      - "gitlab.example.com:192.168.1.116"
+    restart: always
+  app:
+    image: dagman62/ubuntu:sshd 
+    container_name: app
+    ports:
+       - "80:80"
+    networks:
+      custom:
+        ipv4_address: 192.168.61.12
+    dns: 8.8.8.8
+    domainname: example.com
+    hostname: app
+    restart: always
