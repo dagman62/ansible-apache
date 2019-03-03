@@ -2,4 +2,8 @@
 localhost ansible_connection=local
 
 [webserver]
-app
+node1
+node2
+
+[balancer]
+lb

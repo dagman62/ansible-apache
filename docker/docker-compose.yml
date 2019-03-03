@@ -29,15 +29,40 @@ services:
     extra_hosts:
       - "gitlab.example.com:192.168.1.116"
     restart: always
-  app:
+  node1:
     image: dagman62/ubuntu:sshd 
-    container_name: app
+    container_name: node1
     ports:
-       - "80:80"
+       - "81:80"
     networks:
       custom:
         ipv4_address: 192.168.61.12
     dns: 8.8.8.8
     domainname: example.com
-    hostname: app
+    hostname: node1
     restart: always
+  node2:
+    image: dagman62/ubuntu:sshd 
+    container_name: node2
+    ports:
+       - "82:80"
+    networks:
+      custom:
+        ipv4_address: 192.168.61.13
+    dns: 8.8.8.8
+    domainname: example.com
+    hostname: node2
+    restart: always
+  lb:
+    image: dagman62/ubuntu:sshd 
+    container_name: lb
+    ports:
+      - "80:80"
+    networks:
+      custom:
+        ipv4_address: 192.168.61.11
+    dns: 8.8.8.8
+    domainname: example.com
+    hostname: lb
+    restart: always
+

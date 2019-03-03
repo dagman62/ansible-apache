@@ -1,0 +1,7 @@
+---
+- name: setting up load balancer 
+  hosts: balancer 
+  become: true
+  roles: 
+    - { role: geerlingguy.haproxy }
+

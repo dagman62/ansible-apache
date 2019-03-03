@@ -1,10 +1,4 @@
 ---
-apache:
-  user: www-data
-  group: www-data
-  home: /opt/apache
-  email: admin@example.com
-
 
 haproxy_backend_servers:
   - name: node1

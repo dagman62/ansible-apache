@@ -6,7 +6,7 @@
     apache_version: httpd-2.4.38
     apr_version: apr-1.6.5
     apru_version: apr-util-1.6.1
-    php_version: php-7.2.9
+    php_version: php-7.2.15
     php_tarball_url: "http://php.net/get/{{ php_version }}.tar.gz/from/this/mirror"
     php_install_dir: "/tmp/{{ php_version }}"
     apache_tarball_url: "http://www-us.apache.org/dist/httpd/{{ apache_version }}.tar.gz"
@@ -187,12 +187,28 @@
       mode: 0755
 
   - name: Change ownership recursively apache home
+    become: yes
     file:
       path: "{{ apache_home }}"
       owner: "{{ apache_user }}"
       group: "{{ apache_group }}"
       recurse: yes
 
+  - name: Remove index.html
+    become: yes
+    file:
+      path: "{{ apache_home }}/htdocs/index.html"
+      state: absent
+
+  - name: Install index.php
+    become: yes
+    template:
+      src: index.php.j2
+      dest: "{{ apache_home }}/htdocs/index.php"
+      owner: "{{ apache_user }}"
+      group: "{{ apache_group }}"
+      mode: 0644
+
   - name: Starting Apache
     become: yes
-    command: "{{ apache_home }}/bin/apachectl start"
+    command: "{{ apache_home }}/bin/apachectl restart"
