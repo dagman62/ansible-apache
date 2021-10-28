@@ -2,8 +2,7 @@
 localhost ansible_connection=local
 
 [webserver]
-node1
-node2
+shadow.example.com	ansible_user=ggiacalone
 
 [balancer]
 lb
